@@ -32,8 +32,8 @@ class Particle {
     this.x = x;
     this.y = y;
     this.velocity = {
-      x: (Math.random() - 0.5) * 2,
-      y: (Math.random() - 0.5) * 2
+      x: (Math.random() - 0.5) * 3,
+      y: (Math.random() - 0.5) * 3
     }
     this.radius = radius;
     this.color = color;
