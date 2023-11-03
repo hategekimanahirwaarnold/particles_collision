@@ -185,7 +185,7 @@ var particles;
 function init() {
   particles = [];
   for (var i = 0; i < 150; i++) {
-    var radius = 10;
+    var radius = 15;
     var x = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["randomIntFromRange"])(radius, canvas.width - radius);
     var y = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["randomIntFromRange"])(radius, canvas.height - radius);
     var color = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["randomColor"])(colors);

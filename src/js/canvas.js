@@ -87,7 +87,7 @@ function init() {
   particles = [];
 
   for (let i = 0; i < 150; i++) {
-    let radius = 10;
+    let radius = 15;
     let x = randomIntFromRange(radius, canvas.width - radius);
     let y = randomIntFromRange(radius, canvas.height - radius);
     let color= randomColor(colors);
