@@ -132,20 +132,25 @@ var Particle = /*#__PURE__*/function () {
     this.x = x;
     this.y = y;
     this.velocity = {
-      x: (Math.random() - 0.5) * 3,
-      y: (Math.random() - 0.5) * 3
+      x: (Math.random() - 0.5) * 5,
+      y: (Math.random() - 0.5) * 5
     };
     this.radius = radius;
     this.color = color;
+    this.mass = 1;
+    this.opacity = 0;
   }
   _createClass(Particle, [{
     key: "draw",
     value: function draw() {
       c.beginPath();
       c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-      c.strokeStyle = this.color;
+      c.save();
+      c.globalAlpha = this.opacity;
       c.fillStyle = this.color;
       c.fill();
+      c.restore();
+      c.strokeStyle = this.color;
       c.stroke();
       c.closePath();
     }
@@ -158,13 +163,7 @@ var Particle = /*#__PURE__*/function () {
         if (Object(_utils__WEBPACK_IMPORTED_MODULE_0__["distance"])(this.x, this.y, particles[i].x, particles[i].y) - this.radius * 2 < 0) {
           // this.color = "red";
           // particles[i].color = "red";
-          var tempDx = this.velocity.x;
-          var tempDy = this.velocity.y;
-          this.velocity.x = particles[i].velocity.x;
-          this.velocity.y = particles[i].velocity.y;
-          particles[i].velocity.x = tempDx;
-          particles[i].velocity.y = tempDy;
-          // console.log("Collided!");
+          Object(_utils__WEBPACK_IMPORTED_MODULE_0__["resolveCollision"])(particles[i], this);
         } else {
           // this.color = "blue";
         }
@@ -175,6 +174,13 @@ var Particle = /*#__PURE__*/function () {
       if (this.y + this.radius > innerHeight || this.y < this.radius) {
         this.velocity.y = -this.velocity.y;
       }
+      //handle mouse collisions
+      if (Object(_utils__WEBPACK_IMPORTED_MODULE_0__["distance"])(mouse.x, mouse.y, this.x, this.y) < 130 && this.opacity < 0.4) {
+        this.opacity += 0.02;
+      } else if (this.opacity > 0) {
+        this.opacity -= 0.02;
+        this.opacity = Math.max(0, this.opacity);
+      }
       this.x += this.velocity.x;
       this.y += this.velocity.y;
     }
@@ -184,7 +190,7 @@ var Particle = /*#__PURE__*/function () {
 var particles;
 function init() {
   particles = [];
-  for (var i = 0; i < 150; i++) {
+  for (var i = 0; i < 100; i++) {
     var radius = 15;
     var x = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["randomIntFromRange"])(radius, canvas.width - radius);
     var y = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["randomIntFromRange"])(radius, canvas.height - radius);
@@ -236,10 +242,79 @@ function distance(x1, y1, x2, y2) {
   var yDist = y2 - y1;
   return Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2));
 }
+
+/**
+ * Rotates coordinate system for velocities
+ *
+ * Takes velocities and alters them as if the coordinate system they're on was rotated
+ *
+ * @param  Object | velocity | The velocity of an individual particle
+ * @param  Float  | angle    | The angle of collision between two objects in radians
+ * @return Object | The altered x and y velocities after the coordinate system has been rotated
+ */
+
+function rotate(velocity, angle) {
+  var rotatedVelocities = {
+    x: velocity.x * Math.cos(angle) - velocity.y * Math.sin(angle),
+    y: velocity.x * Math.sin(angle) + velocity.y * Math.cos(angle)
+  };
+  return rotatedVelocities;
+}
+
+/**
+ * Swaps out two colliding particles' x and y velocities after running through
+ * an elastic collision reaction equation
+ *
+ * @param  Object | particle      | A particle object with x and y coordinates, plus velocity
+ * @param  Object | otherParticle | A particle object with x and y coordinates, plus velocity
+ * @return Null | Does not return a value
+ */
+
+function resolveCollision(particle, otherParticle) {
+  var xVelocityDiff = particle.velocity.x - otherParticle.velocity.x;
+  var yVelocityDiff = particle.velocity.y - otherParticle.velocity.y;
+  var xDist = otherParticle.x - particle.x;
+  var yDist = otherParticle.y - particle.y;
+
+  // Prevent accidental overlap of particles
+  if (xVelocityDiff * xDist + yVelocityDiff * yDist >= 0) {
+    // Grab angle between the two colliding particles
+    var angle = -Math.atan2(yDist, xDist);
+
+    // Store mass in var for better readability in collision equation
+    var m1 = particle.mass;
+    var m2 = otherParticle.mass;
+
+    // Velocity before equation
+    var u1 = rotate(particle.velocity, angle);
+    var u2 = rotate(otherParticle.velocity, angle);
+
+    // Velocity after 1d collision equation
+    var v1 = {
+      x: u1.x * (m1 - m2) / (m1 + m2) + u2.x * 2 * m2 / (m1 + m2),
+      y: u1.y
+    };
+    var v2 = {
+      x: u2.x * (m1 - m2) / (m1 + m2) + u1.x * 2 * m2 / (m1 + m2),
+      y: u2.y
+    };
+
+    // Final velocity after rotating axis back to original location
+    var vFinal1 = rotate(v1, -angle);
+    var vFinal2 = rotate(v2, -angle);
+
+    // Swap particle velocities for realistic bounce effect
+    particle.velocity.x = vFinal1.x;
+    particle.velocity.y = vFinal1.y;
+    otherParticle.velocity.x = vFinal2.x;
+    otherParticle.velocity.y = vFinal2.y;
+  }
+}
 module.exports = {
   randomIntFromRange: randomIntFromRange,
   randomColor: randomColor,
-  distance: distance
+  distance: distance,
+  resolveCollision: resolveCollision
 };
 
 /***/ })

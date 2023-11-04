@@ -1,4 +1,4 @@
-import utils, { distance, randomColor, randomIntFromRange } from './utils'
+import utils, { distance, randomColor, randomIntFromRange, resolveCollision } from './utils'
 
 const canvas = document.querySelector('canvas')
 const c = canvas.getContext('2d')
@@ -32,19 +32,24 @@ class Particle {
     this.x = x;
     this.y = y;
     this.velocity = {
-      x: (Math.random() - 0.5) * 3,
-      y: (Math.random() - 0.5) * 3
+      x: (Math.random() - 0.5) * 5,
+      y: (Math.random() - 0.5) * 5
     }
     this.radius = radius;
     this.color = color;
+    this.mass = 1;
+    this.opacity = 0;
   }
 
   draw() {
     c.beginPath()
     c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false)
-    c.strokeStyle = this.color
+    c.save()
+    c.globalAlpha = this.opacity;
     c.fillStyle = this.color
     c.fill()
+    c.restore()
+    c.strokeStyle = this.color
     c.stroke()
     c.closePath()
   }
@@ -58,13 +63,7 @@ class Particle {
       {
         // this.color = "red";
         // particles[i].color = "red";
-        let tempDx = this.velocity.x;
-        let tempDy = this.velocity.y;
-        this.velocity.x = particles[i].velocity.x;
-        this.velocity.y = particles[i].velocity.y;
-        particles[i].velocity.x = tempDx;
-        particles[i].velocity.y = tempDy;
-        // console.log("Collided!");
+        resolveCollision(particles[i], this);
       } else {
         // this.color = "blue";
       }
@@ -76,6 +75,15 @@ class Particle {
     if (this.y + this.radius > innerHeight || this.y < this.radius) {
       this.velocity.y = - this.velocity.y;
     }
+    //handle mouse collisions
+    if (distance(mouse.x, mouse.y, this.x, this.y) < 130 && this.opacity < 0.4)
+    {
+      this.opacity += 0.02;
+    } else if (this.opacity > 0)
+    {
+      this.opacity -= 0.02;
+      this.opacity = Math.max(0, this.opacity);
+    }
     this.x += this.velocity.x;
     this.y += this.velocity.y;
   }
@@ -86,7 +94,7 @@ let particles
 function init() {
   particles = [];
 
-  for (let i = 0; i < 150; i++) {
+  for (let i = 0; i < 100; i++) {
     let radius = 15;
     let x = randomIntFromRange(radius, canvas.width - radius);
     let y = randomIntFromRange(radius, canvas.height - radius);
