@@ -16,7 +16,9 @@ function distance(x1, y1, x2, y2) {
 
 /**
  * Rotates coordinate system for velocities
- *
+ * Matrix of rotation: 
+ * R(theta) = | cos(theta)  -sin(theta) |
+              | sin(theta)   cos(theta) |
  * Takes velocities and alters them as if the coordinate system they're on was rotated
  *
  * @param  Object | velocity | The velocity of an individual particle
